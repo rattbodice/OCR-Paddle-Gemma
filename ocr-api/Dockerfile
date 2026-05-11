@@ -1,10 +1,13 @@
 # ocr-api/Dockerfile
 FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 
+ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+
 # 1) System deps: Python 3.10 + OpenCV + poppler for PDF
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     python3-pip python3-dev \
+    libcudnn8 \
     poppler-utils \
     libgl1 \
     libglib2.0-0 \
