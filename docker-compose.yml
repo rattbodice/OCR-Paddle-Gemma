@@ -1,0 +1,94 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_NUM_CTX=2048
+      - OLLAMA_KEEP_ALIVE=60m
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_NUM_GPU=999
+      - OLLAMA_FLASH_ATTN=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    mem_limit: 4g
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
+    mem_limit: 256m
+    restart: unless-stopped
+
+  ocr-api:
+    build: ./ocr-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ollama
+      - redis
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma4:8b-instruct-q4_K_M}
+      - OCR_API_KEY=${OCR_API_KEY:-}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - BLUR_THRESHOLD=80
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ocr_uploads:/tmp/uploads
+      - paddleocr_models:/root/.paddleocr
+    cpus: 3.5
+    mem_limit: 3g
+    restart: unless-stopped
+
+  celery-worker:
+    build: ./ocr-api
+    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      - ollama
+      - redis
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma4:8b-instruct-q4_K_M}
+      - OCR_API_KEY=${OCR_API_KEY:-}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - BLUR_THRESHOLD=80
+      - CUDA_VISIBLE_DEVICES=0
+      - C_FORCE_ROOT=true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ocr_uploads:/tmp/uploads
+      - paddleocr_models:/root/.paddleocr
+    cpus: 3.5
+    mem_limit: 3g
+    restart: unless-stopped
+
+volumes:
+  ollama_models:
+  paddleocr_models:
+  ocr_uploads:
