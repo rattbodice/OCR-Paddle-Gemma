@@ -1,7 +1,5 @@
 # ocr-api/Dockerfile
-FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
-
-ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # 1) System deps: Python 3.10 + OpenCV + poppler for PDF
 RUN apt-get update \
@@ -15,8 +13,8 @@ RUN apt-get update \
  && ln -sf python3 /usr/bin/python \
  && rm -rf /var/lib/apt/lists/*
 
-# 2) PaddlePaddle GPU - install from PaddlePaddle index (CUDA 12.0 build, compatible with 12.2)
-RUN pip install --no-cache-dir paddlepaddle-gpu==2.6.2.post120 -i https://www.paddlepaddle.org.cn/packages/stable/cu120/
+# 2) PaddlePaddle GPU - CUDA 11.8 build (stable, widely tested)
+RUN pip install --no-cache-dir paddlepaddle-gpu==2.6.2.post118 -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
 
 # 3) PaddleOCR + remaining dependencies (numpy<2 in same command so resolver respects it)
 RUN pip install --no-cache-dir \
