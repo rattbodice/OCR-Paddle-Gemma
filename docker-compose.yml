@@ -61,7 +61,7 @@ services:
 
   celery-worker:
     build: ./ocr-api
-    command: celery -A celery_app worker --loglevel=info --concurrency=4
+    command: celery -A celery_app worker --loglevel=info --pool=solo
     depends_on:
       - ollama
       - redis
