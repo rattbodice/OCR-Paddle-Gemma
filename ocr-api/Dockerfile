@@ -30,9 +30,6 @@ RUN pip install --no-cache-dir \
     rapidfuzz \
     opencv-python-headless
 
-# 4) Pre-bake PaddleOCR models to avoid first-request cold start
-RUN python -c "from paddleocr import PaddleOCR; PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False, show_log=False)"
-
 WORKDIR /app
 COPY app.py celery_app.py tasks.py ./
 
