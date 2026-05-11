@@ -16,7 +16,10 @@ RUN apt-get update \
 # 2) PaddlePaddle GPU - install from PaddlePaddle index (CUDA 12.0 build, compatible with 12.2)
 RUN pip install --no-cache-dir paddlepaddle-gpu==2.6.2.post120 -i https://www.paddlepaddle.org.cn/packages/stable/cu120/
 
-# 3) PaddleOCR + remaining dependencies
+# 3) Pin numpy<2 before installing paddleocr (paddlepaddle compiled against numpy 1.x ABI)
+RUN pip install --no-cache-dir "numpy<2.0"
+
+# 4) PaddleOCR + remaining dependencies
 RUN pip install --no-cache-dir \
     paddleocr==2.7.3 \
     fastapi \
