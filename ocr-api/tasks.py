@@ -11,12 +11,13 @@ from openai import OpenAI
 # ── Config ───────────────────────────────────────────────────────
 TARGET_WIDTH = 1280
 
-_paddle = PaddleOCR(
-    use_angle_cls=True,
-    lang="ch",
-    use_gpu=True,
-    show_log=False,
-)
+_paddle = None
+
+def _get_paddle():
+    global _paddle
+    if _paddle is None:
+        _paddle = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=True, show_log=False)
+    return _paddle
 
 
 # ── Robust Preprocessing ─────────────────────────────────────────
@@ -115,7 +116,7 @@ def _fuzzy_score(a: str, b: str) -> float:
 # ── PaddleOCR Text Extraction ─────────────────────────────────────
 def run_paddleocr(image_input) -> str:
     """Run PaddleOCR on file path or numpy array; returns joined text lines."""
-    result = _paddle.ocr(image_input, cls=True)
+    result = _get_paddle().ocr(image_input, cls=True)
     if not result or not result[0]:
         return ""
     lines = []
